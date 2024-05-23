@@ -1,6 +1,6 @@
 # Blog - API RESTful
 
-Esta é uma API RESTful desenvolvida em Node.js para gerenciar um blog de política. Ela utiliza o PostgreSQL como banco de dados, o Sequelize como ORM, o Express para criar as rotas e o Helmet para segurança. A API permite gerenciar usuários (assinantes, escritores e administradores), categorias e posts.
+Esta é uma API RESTful desenvolvida em Node.js para gerenciar um blog básico. Ela utiliza o PostgreSQL como banco de dados, o Sequelize como ORM, o Express para criar as rotas e o Helmet para segurança. A API permite gerenciar usuários (assinantes, escritores e administradores), categorias e posts.
 
 ## Recursos
 
@@ -18,7 +18,7 @@ Esta é uma API RESTful desenvolvida em Node.js para gerenciar um blog de polít
 
 ## Instalação
 
-1. Clone este repositório: `git clone https://seu-repositorio.git`
+1. Clone este repositório: `git clone https://github.com/devfelipelimabr/basic_blog_api.git`
 2. Acesse a pasta do projeto: `cd basic_blog`
 3. Instale as dependências: `npm install` (ou `yarn install`)
 4. Crie o banco de dados PostgreSQL com o nome especificado em `.env`.

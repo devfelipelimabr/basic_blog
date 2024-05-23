@@ -11,7 +11,12 @@ module.exports = {
   },
 
   async show(req, res) {
-    const user = await User.findByPk(req.params.id, {
+    const userId = req.params.id;
+    if (!userId || !Number.isInteger(parseInt(userId, 10))) {
+      return res.status(400).json({ error: 'Invalid user ID.' });
+    }
+
+    const user = await User.findByPk(userId, {
       attributes: { exclude: ['password'] }
     });
     if (!user) return res.status(404).json({ error: 'User not found' });

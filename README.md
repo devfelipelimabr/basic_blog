@@ -34,7 +34,7 @@ Esta é uma API RESTful desenvolvida em Node.js para gerenciar um blog básico. 
 ## Uso
 
 1. Inicie o servidor: `npm start` (ou `yarn start`)
-2. A API estará disponível em `http://localhost:3000/api` (ou na porta que você configurou).
+2. A API estará disponível em `http://localhost:3333/api` (ou na porta que você configurou).
 
 ## Rotas da API
 

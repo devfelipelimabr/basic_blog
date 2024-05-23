@@ -8,7 +8,12 @@ module.exports = {
   },
 
   async show(req, res) {
-    const category = await Category.findByPk(req.params.id);
+    const catId = req.params.id;
+    if (!catId || !Number.isInteger(parseInt(catId, 10))) {
+      return res.status(400).json({ error: 'Invalid post ID.' });
+    }
+
+    const category = await Category.findByPk(catId);
     if (!category) return res.status(404).json({ error: 'Category not found' });
     res.status(200).json(category);
   },

@@ -9,13 +9,19 @@ module.exports = {
     const posts = await Post.findAll({
       include: [
         { model: User, attributes: ['name'] },
-        { model: Category, attributes: ['name'] }]
+        { model: Category, attributes: ['name'] }],
+      order: [['createdAt', 'DESC']]
     }); // Includes relationships with User and Category
     res.status(200).json(posts);
   },
 
   async show(req, res) {
-    const post = await Post.findByPk(req.params.id, {
+    const postId = req.params.id;
+    if (!postId || !Number.isInteger(parseInt(postId, 10))) {
+      return res.status(400).json({ error: 'Invalid post ID.' });
+    }
+
+    const post = await Post.findByPk(postId, {
       include: [
         { model: User, attributes: ['name'] },
         { model: Category, attributes: ['name'] }

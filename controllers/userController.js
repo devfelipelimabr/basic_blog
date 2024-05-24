@@ -1,8 +1,13 @@
 // controllers/userController.js
-const { error } = require('console');
+
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
-const { validatePassword, checkEmailUnique, checkRole } = require('../utils/utilMethods');
+const jwt = require('jsonwebtoken');
+const { validatePassword, checkEmailUnique } = require('../utils/utilMethods');
+
+const generateToken = (user) => {
+  return jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '5d' });
+};
 
 module.exports = {
   async index(req, res) {
@@ -29,22 +34,16 @@ module.exports = {
     if (!name || !email || !password) return res.status(400).json({ error: 'Mandatory fields not filled in' });
 
     try {
-      // Single email validation
       await checkEmailUnique(email);
-      // Password validation
       validatePassword(password);
 
       const lowerName = name.toLowerCase();
       const lowerEmail = email.toLowerCase();
-
       const hashedPassword = await bcrypt.hash(password, 8);
 
       let user;
-
-      if (req.session.userId && (await checkRole(req.session.userId)) == 'admin') {
-        let lowerRole;
-        role ? lowerRole = role.toLowerCase() : lowerRole = 'subscriber';
-        user = await User.create({ name: lowerName, email: lowerEmail, password: hashedPassword, role: lowerRole });
+      if (req.user && req.user.role === 'admin') {
+        user = await User.create({ name: lowerName, email: lowerEmail, password: hashedPassword, role: role ? role.toLowerCase() : 'subscriber' });
       } else {
         user = await User.create({ name: lowerName, email: lowerEmail, password: hashedPassword, role: 'subscriber' });
       }
@@ -64,24 +63,17 @@ module.exports = {
 
     try {
       if (password) {
-        // Validação da senha
         validatePassword(password);
-        const hashedPassword = await bcrypt.hash(password, 8);
-        req.body.password = hashedPassword;
+        req.body.password = await bcrypt.hash(password, 8);
       }
-      if (name) {
-        req.body.name = name.toLowerCase();
-      }
+      if (name) req.body.name = name.toLowerCase();
       if (email) {
-        // Single email validation
         await checkEmailUnique(email);
         req.body.email = email.toLowerCase();
       }
-      if (role && (await checkRole(req.session.userId)) == 'admin') {
-        req.body.role = role.toLowerCase();
-      } else {
-        req.body.role = user.role;
-      }
+      
+      (role && req.user.role === 'admin') ? req.body.role = role.toLowerCase() : req.body.role = req.user.role;
+
 
       await user.update(req.body);
       res.status(200).json({ message: 'User updated' });
@@ -91,7 +83,7 @@ module.exports = {
   },
 
   async destroy(req, res) {
-    if (req.params.id == req.session.userId) return res.status(400).json({ error: 'User cannot self-delete' });
+    if (req.params.id == req.user.id) return res.status(400).json({ error: 'User cannot self-delete' });
 
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -106,31 +98,14 @@ module.exports = {
     if (!email || !password) return res.status(400).json({ error: 'Email or password not provided' });
 
     const lowerEmail = email.toLowerCase();
-
     const user = await User.findOne({ where: { email: lowerEmail } });
-    if (!user) return res.status(400).json({ error: 'Invalid email or password' });
 
-    if (!(await bcrypt.compare(password, user.password))) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
-    req.session.userId = user.id;
+    const token = generateToken(user);
 
-    const userData = {
-      id: user.id,
-      name: user.name,
-      role: user.role
-    };
-    
-    res.status(200).json({ message: 'Login successful', user: userData });
-  },
-
-  async logout(req, res) {
-    req.session.destroy(err => {
-      if (err) {
-        return res.status(500).json({ error: 'Logout failed' });
-      }
-      res.status(200).json({ message: 'Logout successful' });
-    });
+    res.status(200).json({ message: 'Login successful', token });
   }
 };

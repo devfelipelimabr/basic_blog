@@ -15,7 +15,6 @@ module.exports = {
     if (limit > 50) limit = 50;
 
     const offset = (page - 1) * limit;
-    console.log("Category ID: " + req.query.category);
     // Construção da query (com ou sem filtro por categoria)
     const whereClause = {};
     if (Number.isInteger(categoryId)) {
@@ -63,13 +62,16 @@ module.exports = {
 
   async store(req, res) {
     const { title, content, image, categoryId } = req.body;
-    const authorId = req.session.userId;
+    const authorId = req.user.id;
 
     try {
       const user = await User.findByPk(authorId);
       const category = await Category.findByPk(categoryId);
-      if (!user || !category) {
-        return res.status(404).json({ error: 'User or Category not found' });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      if (!category) {
+        return res.status(404).json({ error: 'Category not found' });
       }
 
       const post = await Post.create({ title, content, image, UserId: authorId, CategoryId: categoryId });
@@ -82,7 +84,7 @@ module.exports = {
   async update(req, res) {
     const post = await Post.findByPk(req.params.id);
     if (!post) return res.status(404).json({ error: 'Post not found' });
-    if (req.session.userId != post.UserId && (await checkRole(req.session.userId)) != 'admin')
+    if (req.user.id != post.UserId && req.user.role != 'admin')
       return res.status(400).json({ error: 'Only an administrator or the author of the post can make this request' });
 
     const { title, content, image, categoryId } = req.body;
@@ -103,7 +105,7 @@ module.exports = {
   async destroy(req, res) {
     const post = await Post.findByPk(req.params.id);
     if (!post) return res.status(404).json({ error: 'Post not found' });
-    if (req.session.userId != post.UserId && (await checkRole(req.session.userId)) != 'admin')
+    if (req.user.id != post.UserId && req.user.role != 'admin')
       return res.status(400).json({ error: 'Only an administrator or the author of the post can make this request' });
 
     if (post) await post.destroy();

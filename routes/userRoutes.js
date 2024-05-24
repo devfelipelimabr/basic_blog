@@ -8,10 +8,10 @@ const authMiddleware = require('../middlewares/authMiddlewares');
 router.post('/login', userController.login);
 
 // POST api/users/logout - User logout (all users)
-router.post('/logout', userController.logout);
+// router.post('/logout', userController.logout);
 
 // POST api/users - Create a new user (open)
-router.post('/', userController.store);
+router.post('/', authMiddleware.nextMiddleware, userController.store);
 
 // GET api/users - List all users (admin)
 router.get('/', authMiddleware.adminMiddleware, userController.index);

@@ -4,7 +4,7 @@ Esta é uma API RESTful desenvolvida em Node.js para gerenciar um blog básico. 
 
 ## Recursos
 
-- **Autenticação:** Login e logout de usuários por sessão.
+- **Autenticação:** Login e logout de usuários por JWT.
 - **Usuários:** Criação, leitura, atualização e exclusão de usuários, com diferentes roles (assinante, escritor, administrador).
 - **Categorias:** Criação, leitura, atualização e exclusão de categorias de posts.
 - **Posts:** Criação, leitura, atualização e exclusão de posts, com associação ao autor e à categoria.
@@ -23,12 +23,12 @@ Esta é uma API RESTful desenvolvida em Node.js para gerenciar um blog básico. 
 3. Instale as dependências: `npm install` (ou `yarn install`)
 4. Crie o banco de dados PostgreSQL com o nome especificado em `.env`.
 5. Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
-    - `DB_HOST`
-    - `DB_USER`
-    - `DB_PASSWORD`
-    - `DB_NAME`
-    - `DB_PORT`
-    - `SESSION_SECRET` (uma string aleatória para usar como chave secreta das sessões)
+   - `DB_HOST`
+   - `DB_USER`
+   - `DB_PASSWORD`
+   - `DB_NAME`
+   - `DB_PORT`
+   - `JWT_SECRET` (uma string aleatória para usar como chave secreta do JWT)
 6. Rode as migrations para criar as tabelas: `npx sequelize-cli db:migrate` (ou `yarn sequelize db:migrate`)
 
 ## Uso

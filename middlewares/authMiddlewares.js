@@ -1,51 +1,67 @@
-// middlewares/adminMiddleware.js
+// middlewares/authMiddlewares.js
 
-const { error } = require("console");
-const { checkRole } = require("../utils/utilMethods");
+const jwt = require('jsonwebtoken');
 
-module.exports =
-{
-    // (checks whether the logged in user is the same as the requested one.)
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.status(401).json({ error: 'Token not provided' });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Invalid token' });
+        req.user = user;
+        next();
+    });
+};
+
+module.exports = {
+    async nextMiddleware(req, res, next) {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) return next();
+
+        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+            if (err) return next();
+            req.user = user;
+            next();
+        });
+    },
+
     async userMiddleware(req, res, next) {
-        if (!req.session.userId) {
-            return res.status(401).json({ error: 'Unauthenticated user.' });
-        }
-        if (req.params.id != req.session.userId && (await checkRole(req.session.userId)) != 'admin') {
-            return res.status(401).json({ error: 'Access denied. Only administrators or the requested user can access this route.' })
-        }
-        next();
+        authenticateToken(req, res, async () => {
+            if (req.user.role != 'admin' && req.params.id != req.user.id) {
+                return res.status(403).json({ error: 'Access denied. Only the requested user or  administrators can access this route.' });
+            }
+            next();
+        });
     },
 
-    // (checks if the administrator is logged in)
     async adminMiddleware(req, res, next) {
-        if (!req.session.userId) {
-            return res.status(401).json({ error: 'Unauthenticated user.' });
-        }
-        if ((await checkRole(req.session.userId)) != 'admin') {
-            return res.status(403).json({ error: 'Access denied. Only administrators can access this route.' });
-        }
-        next();
+        authenticateToken(req, res, async () => {
+            if (req.user.role != 'admin') {
+                return res.status(403).json({ error: 'Access denied. Only administrators can access this route.' });
+            }
+            next();
+        });
     },
 
-    // (checks if the subscriber is logged in)
     async subscriberMiddleware(req, res, next) {
-        if (!req.session.userId) {
-            return res.status(401).json({ error: 'Unauthenticated user.' });
-        }
-        if ((await checkRole(req.session.userId)) != 'subscriber' && (await checkRole(req.session.userId)) != 'admin') {
-            return res.status(403).json({ error: 'Access denied. Only subscribers can access this route.' });
-        }
-        next();
+        authenticateToken(req, res, async () => {
+            if (req.user.role != 'subscriber' && req.user.role != 'admin') {
+                return res.status(403).json({ error: 'Access denied. Only subscribers or admins can access this route.' });
+            }
+            next();
+        });
     },
 
-    // (checks if the writer is logged in)
     async writerMiddleware(req, res, next) {
-        if (!req.session.userId) {
-            return res.status(401).json({ error: 'Unauthenticated user.' });
-        }
-        if ((await checkRole(req.session.userId)) != 'writer' && (await checkRole(req.session.userId)) != 'admin') {
-            return res.status(403).json({ error: 'Access denied. Only writers can access this route.' });
-        }
-        next();
+        authenticateToken(req, res, async () => {
+            if (req.user.role != 'writer' && req.user.role != 'admin') {
+                return res.status(403).json({ error: 'Access denied. Only writers or admins can access this route.' });
+            }
+            next();
+        });
     }
-}
+};

@@ -1,8 +1,7 @@
+// app.js
 require('dotenv').config();
 const express = require('express');
-const session = require('express-session');
 const helmet = require('helmet');
-const { body, validationResult } = require('express-validator');
 const sequelize = require('./config/database');
 
 const postRoutes = require('./routes/postRoutes');
@@ -10,16 +9,6 @@ const userRoutes = require('./routes/userRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 
 const app = express();
-
-// Session Setup
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: 5 * 24 * 60 * 60 * 1000 // 5 days in miliseconds
-    }
-}));
 
 // Middlewares
 app.use(express.json());

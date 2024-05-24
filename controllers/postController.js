@@ -6,13 +6,43 @@ const { checkRole } = require('../utils/utilMethods');
 
 module.exports = {
   async index(req, res) {
-    const posts = await Post.findAll({
+    const page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 10;
+    const categoryId = parseInt(req.query.category, 10); // Obter o ID da categoria (se existir)
+
+    // Garantir que o limite esteja entre 1 e 50
+    if (limit < 1) limit = 1;
+    if (limit > 50) limit = 50;
+
+    const offset = (page - 1) * limit;
+    console.log("Category ID: " + req.query.category);
+    // Construção da query (com ou sem filtro por categoria)
+    const whereClause = {};
+    if (Number.isInteger(categoryId)) {
+
+      // Verificar se a categoria existe
+      const categoryExists = await Category.findByPk(categoryId);
+      if (!categoryExists) return res.status(404).json({ error: 'Category not found' });
+
+      whereClause.CategoryId = categoryId
+    }
+
+    const posts = await Post.findAndCountAll({
       include: [
         { model: User, attributes: ['name'] },
-        { model: Category, attributes: ['name'] }],
-      order: [['createdAt', 'DESC']]
-    }); // Includes relationships with User and Category
-    res.status(200).json(posts);
+        { model: Category, attributes: ['name'] }
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: limit,
+      offset: offset,
+      where: whereClause // Adicionar a cláusula WHERE (se houver)
+    });
+
+    res.status(200).json({
+      posts: posts.rows,
+      currentPage: page,
+      totalPages: Math.ceil(posts.count / limit)
+    });
   },
 
   async show(req, res) {
@@ -26,7 +56,7 @@ module.exports = {
         { model: User, attributes: ['name'] },
         { model: Category, attributes: ['name'] }
       ]
-    }); // Includes relationships with User and Category
+    });
     if (!post) return res.status(404).json({ error: 'Post not found' });
     res.status(200).json(post);
   },
@@ -36,7 +66,6 @@ module.exports = {
     const authorId = req.session.userId;
 
     try {
-      // Check if the user and category exist
       const user = await User.findByPk(authorId);
       const category = await Category.findByPk(categoryId);
       if (!user || !category) {
@@ -77,9 +106,7 @@ module.exports = {
     if (req.session.userId != post.UserId && (await checkRole(req.session.userId)) != 'admin')
       return res.status(400).json({ error: 'Only an administrator or the author of the post can make this request' });
 
-    if (post)
-
-      await post.destroy();
+    if (post) await post.destroy();
     res.status(200).json({ message: 'Post deleted' });
   }
 };

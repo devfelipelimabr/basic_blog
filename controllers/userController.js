@@ -92,7 +92,7 @@ module.exports = {
 
   async destroy(req, res) {
     if (req.params.id == req.session.userId) return res.status(400).json({ error: 'User cannot self-delete' });
-    
+
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -103,17 +103,26 @@ module.exports = {
   async login(req, res) {
     const { email, password } = req.body;
 
+    if (!email || !password) return res.status(400).json({ error: 'Email or password not provided' });
+
     const lowerEmail = email.toLowerCase();
 
     const user = await User.findOne({ where: { email: lowerEmail } });
-    if (!user) return res.status(401).json({ error: 'Invalid email or password' });
+    if (!user) return res.status(400).json({ error: 'Invalid email or password' });
 
     if (!(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
     req.session.userId = user.id;
-    res.status(200).json({ message: 'Login successful' });
+
+    const userData = {
+      id: user.id,
+      name: user.name,
+      role: user.role
+    };
+    
+    res.status(200).json({ message: 'Login successful', user: userData });
   },
 
   async logout(req, res) {

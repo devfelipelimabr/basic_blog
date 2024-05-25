@@ -6,7 +6,14 @@ const jwt = require('jsonwebtoken');
 const { validatePassword, checkEmailUnique } = require('../utils/utilMethods');
 
 const generateToken = (user) => {
-  return jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '5d' });
+  const userData = {
+    id: user.id,
+    role: user.role,
+    name: user.name,
+    email: user.email
+  };
+
+  return jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: '5d' });
 };
 
 module.exports = {
@@ -71,7 +78,7 @@ module.exports = {
         await checkEmailUnique(email);
         req.body.email = email.toLowerCase();
       }
-      
+
       (role && req.user.role === 'admin') ? req.body.role = role.toLowerCase() : req.body.role = req.user.role;
 
 
@@ -106,6 +113,13 @@ module.exports = {
 
     const token = generateToken(user);
 
-    res.status(200).json({ message: 'Login successful', token });
+    const userData = {
+      id: user.id,
+      name: user.name,
+      role: user.role,
+      email: user.email
+    };
+
+    res.status(200).json({ message: 'Login successful', token, user: userData });
   }
 };

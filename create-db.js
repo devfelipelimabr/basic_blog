@@ -10,7 +10,7 @@ const fs = require('fs');
 const db = {};
 
 // Ler os arquivos de modelo do diretório models
-const modelsDir = path.join(__dirname, '../models');
+const modelsDir = path.join(__dirname, './models');
 fs.readdirSync(modelsDir)
   .filter(file => file.endsWith('.js') && file !== 'index.js')
   .forEach(file => {

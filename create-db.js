@@ -29,7 +29,7 @@ Object.values(db).forEach(model => {
 // Sincronizar o banco de dados com os modelos
 (async () => {
   try {
-    await sequelize.sync({ force: true }); // Use { force: true } apenas em ambiente de desenvolvimento
+    await sequelize.sync({ force: false }); // Use { force: true } apenas em ambiente de desenvolvimento
     console.log('Banco de dados sincronizado com sucesso.');
   } catch (error) {
     console.error('Erro ao sincronizar o banco de dados:', error);
